@@ -69,18 +69,31 @@ def load_pdf_layers(path):
     layers = []
     for i, page in enumerate(doc):
         # Render page to image (dpi=150 is a good balance for screen/edit)
-        pix = page.get_pixmap(dpi=150, alpha=True)
-        mode = "RGBA" if pix.alpha else "RGB"
-        img = Image.frombytes(mode, [pix.width, pix.height], pix.samples)
+        # alpha=False ensures we get a solid background (white paper), not transparency
+        pix = page.get_pixmap(dpi=150, alpha=False)
+        img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
         layers.append(Layer(f"Page {i+1}", img))
     return layers
 
 def save_layers_to_pdf(layers, path):
     """Saves a list of layers as a single multi-page PDF."""
-    visible_layers = [l.img.convert("RGB") for l in layers if l.visible]
-    if not visible_layers:
+    visible_imgs = []
+    
+    for l in layers:
+        if l.visible:
+            # Handle RGBA -> RGB conversion by pasting on white background
+            # This ensures any transparency becomes white paper, not black artifacts
+            if l.img.mode == 'RGBA':
+                background = Image.new("RGB", l.img.size, (255, 255, 255))
+                # Paste the image using its own alpha channel as the mask
+                background.paste(l.img, mask=l.img.split()[3])
+                visible_imgs.append(background)
+            else:
+                visible_imgs.append(l.img.convert("RGB"))
+                
+    if not visible_imgs:
         return
     
-    base = visible_layers[0]
-    rest = visible_layers[1:]
+    base = visible_imgs[0]
+    rest = visible_imgs[1:]
     base.save(path, save_all=True, append_images=rest, resolution=150.0)
