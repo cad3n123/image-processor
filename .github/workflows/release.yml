@@ -22,12 +22,12 @@ jobs:
       - name: Set up Pixi
         uses: prefix-dev/setup-pixi@v0.5.1
         with:
-          pixi-version: v0.18.0
+          pixi-version: latest  # CHANGED: Use latest to support new lockfiles
 
       - name: Build with PyInstaller
         run: pixi run build
         env:
-          GITHUB_REF_NAME: ${{ github.ref_name }} # Passes "v1.0.0" to the script
+          GITHUB_REF_NAME: ${{ github.ref_name }}
 
       - name: Upload Artifacts to Release
         uses: softprops/action-gh-release@v1
