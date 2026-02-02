@@ -10,7 +10,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QIcon
 
-# Import our custom modules
+#  Import our custom modules
 from ui import LayerWidget, CheckerLabel, CompareDialog
 from logic import (
     Layer, Worker, to_alpha, invert_color, composite_layers, remove, 
