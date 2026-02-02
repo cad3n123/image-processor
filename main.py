@@ -1,5 +1,13 @@
 import sys
 import os
+
+if "QT_PLUGIN_PATH" not in os.environ:
+    # In a pixi env, python is in <env>/bin, plugins are in <env>/lib/qt6/plugins
+    base_dir = os.path.dirname(os.path.dirname(sys.executable))
+    plugin_path = os.path.join(base_dir, "lib", "qt6", "plugins")
+    if os.path.exists(plugin_path):
+        os.environ["QT_PLUGIN_PATH"] = plugin_path
+
 from PIL import Image
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
