@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import (
     QLabel, QTabWidget
 )
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor, QIcon
+from PyQt6.QtGui import QColor
 
 # Import our custom modules
 from ui import LayerWidget, CheckerLabel, CompareDialog
@@ -16,6 +16,7 @@ from logic import (
     Layer, Worker, to_alpha, invert_color, composite_layers, remove, 
     load_pdf_layers, save_layers_to_pdf
 )
+from updater import Updater
 
 class EditorBase(QWidget):
     """
@@ -254,6 +255,9 @@ class MainWindow(QMainWindow):
         
         self.tabs.addTab(ImageEditor(), "Image Compositor")
         self.tabs.addTab(PdfEditor(), "PDF Tools")
+        
+        # Init Updater
+        self.updater = Updater(self)
 
     def setStyle(self):
         QApplication.setStyle("Fusion")

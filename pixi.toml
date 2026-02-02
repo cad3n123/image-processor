@@ -2,10 +2,12 @@
 authors = ["cad3n123 <cadencrowson@gmail.com>"]
 channels = ["conda-forge"]
 name = "image_processor"
-platforms = ["linux-64"]
+platforms = ["linux-64", "win-64", "osx-64", "osx-arm64"]
 version = "0.1.0"
 
 [tasks]
+start = "python main.py"
+build = "python scripts/build.py"
 
 [dependencies]
 python = "3.11.*"
@@ -14,3 +16,6 @@ pillow = ">=10.0.0,<11"
 numpy = ">=1.26.0,<2"
 rembg = "*"
 pymupdf = "*"
+requests = "*"
+packaging = "*"
+pyinstaller = "*"
