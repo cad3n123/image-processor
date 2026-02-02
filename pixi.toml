@@ -1,4 +1,4 @@
-[workspace]
+[project]
 authors = ["cad3n123 <cadencrowson@gmail.com>"]
 channels = ["conda-forge"]
 name = "image_processor"
