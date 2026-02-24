@@ -262,11 +262,26 @@ class PdfEditor(EditorBase):
         paths = get_ordered_open_file_names(self, "Import PDFs", "", "PDF Files (*.pdf)")
         if not paths: return
         
+        # Determine the next available PDF index by checking existing layers
+        existing_layers = self.get_all_nodes()
+        max_pdf_idx = 0
+        for layer in existing_layers:
+            if layer.name.startswith("PDF "):
+                try:
+                    parts = layer.name.split(" ")
+                    idx = int(parts[1])
+                    max_pdf_idx = max(max_pdf_idx, idx)
+                except (IndexError, ValueError):
+                    pass
+        
+        current_pdf_idx = max_pdf_idx + 1
+
         for path in paths:
             try:
-                layers = load_pdf_layers(path)
+                layers = load_pdf_layers(path, pdf_index=current_pdf_idx)
                 for l in layers:
                     self.add_layer_to_list(l)
+                current_pdf_idx += 1
             except Exception as e:
                 QMessageBox.critical(self, "Error importing PDF", f"{path}:\n{str(e)}")
 

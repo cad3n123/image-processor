@@ -63,16 +63,19 @@ def composite_layers(layers):
             canvas = Image.alpha_composite(canvas, layer_canvas)
     return canvas
 
-def load_pdf_layers(path):
+def load_pdf_layers(path, pdf_index=None):
     """Opens a PDF and converts all pages to Layer objects."""
     doc = fitz.open(path)
     layers = []
+    
+    prefix = f"PDF {pdf_index} " if pdf_index is not None else ""
+    
     for i, page in enumerate(doc):
         # Render page to image (dpi=150 is a good balance for screen/edit)
         # alpha=False ensures we get a solid background (white paper), not transparency
         pix = page.get_pixmap(dpi=150, alpha=False)
         img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-        layers.append(Layer(f"Page {i+1}", img))
+        layers.append(Layer(f"{prefix}Page {i+1}", img))
     return layers
 
 def save_layers_to_pdf(layers, path):
