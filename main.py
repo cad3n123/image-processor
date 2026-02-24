@@ -25,6 +25,45 @@ from logic import (
     load_pdf_layers, save_layers_to_pdf
 )
 
+class OrderedFileDialog(QFileDialog):
+    def __init__(self, parent=None, caption="", directory="", filter=""):
+        super().__init__(parent, caption, directory, filter)
+        self.setFileMode(QFileDialog.FileMode.ExistingFiles)
+        self.setOption(QFileDialog.Option.DontUseNativeDialog, True)
+        self._ordered_selection = []
+        self._connected_models = set()
+        self.directoryEntered.connect(self._on_directory_entered)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        self._connect_views()
+
+    def _on_directory_entered(self, path):
+        self._connect_views()
+
+    def _connect_views(self):
+        for view in self.findChildren(QAbstractItemView):
+            model = view.selectionModel()
+            if model and id(model) not in self._connected_models:
+                model.selectionChanged.connect(self._on_selection_changed)
+                self._connected_models.add(id(model))
+
+    def _on_selection_changed(self):
+        current_selection = super().selectedFiles()
+        self._ordered_selection = [x for x in self._ordered_selection if x in current_selection]
+        for x in current_selection:
+            if x not in self._ordered_selection:
+                self._ordered_selection.append(x)
+
+    def selectedFiles(self):
+        return self._ordered_selection
+
+def get_ordered_open_file_names(parent, caption, directory, filter):
+    dialog = OrderedFileDialog(parent, caption, directory, filter)
+    if dialog.exec():
+        return dialog.selectedFiles()
+    return []
+
 class EditorBase(QWidget):
     """
     Base class containing the List + Preview UI pattern.
@@ -156,7 +195,7 @@ class ImageEditor(EditorBase):
         self.comp_img = None
 
     def load_img(self):
-        paths, _ = QFileDialog.getOpenFileNames(self, "Import", "", "Images (*.png *.jpg *.jpeg)")
+        paths = get_ordered_open_file_names(self, "Import Images", "", "Images (*.png *.jpg *.jpeg)")
         for p in paths:
             try:
                 self.add_layer_to_list(Layer(os.path.basename(p), Image.open(p)))
@@ -220,15 +259,16 @@ class PdfEditor(EditorBase):
         self.add_btn("Export Combined PDF", self.export, self.btns_bottom, "#2a82da")
 
     def load_pdf(self):
-        path, _ = QFileDialog.getOpenFileName(self, "Import PDF", "", "PDF Files (*.pdf)")
-        if not path: return
+        paths = get_ordered_open_file_names(self, "Import PDFs", "", "PDF Files (*.pdf)")
+        if not paths: return
         
-        try:
-            layers = load_pdf_layers(path)
-            for l in layers:
-                self.add_layer_to_list(l)
-        except Exception as e:
-            QMessageBox.critical(self, "Error importing PDF", str(e))
+        for path in paths:
+            try:
+                layers = load_pdf_layers(path)
+                for l in layers:
+                    self.add_layer_to_list(l)
+            except Exception as e:
+                QMessageBox.critical(self, "Error importing PDF", f"{path}:\n{str(e)}")
 
     def refresh(self):
         # For PDF, we just show the selected page. There is no 'composite' view.
